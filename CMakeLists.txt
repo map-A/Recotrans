@@ -55,21 +55,17 @@ include_directories(
 link_directories(${Qt5_LIB_DIRS}
                  "${PROJECT_SOURCE_DIR}/cmake-build-debug/submodules/rtaudio/")
 
-# Add executable
-add_executable(testa
-    main.cpp
-    floatingWindow.cpp
-    floatingWindow.h
-    stream.h
-    stream.cpp
-    audio.h
-    audio.cpp
-    stringgenerator.h
-    stringgenerator.cpp
-)
 
-# Link libraries
-target_link_libraries(testa PRIVATE Qt5::Widgets Qt5::Core whisper ${RTAUDIO_LIB} ${CMAKE_THREAD_LIBS_INIT})
+add_executable(lyric lyric.cpp
+        LyricWidget.cpp
+        LyricWidget.h
+        stream.h
+        stream.cpp
+        audio.h
+        audio.cpp
+        stringgenerator.h
+        stringgenerator.cpp)
+target_link_libraries(lyric PRIVATE Qt5::Widgets Qt5::Core whisper ${RTAUDIO_LIB} ${CMAKE_THREAD_LIBS_INIT})
 
 
 
