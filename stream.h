@@ -17,11 +17,11 @@
 
 constexpr float EPSILON = 1e-6;
 
-// Utility function to check if a vector is silent (all values near zero)
-bool isSilent(const std::vector<float>& vector) {
-    return std::all_of(vector.begin(), vector.end(),
-                       [](float value) { return std::fabs(value) <= EPSILON; });
-}
+//// Utility function to check if a vector is silent (all values near zero)
+//bool isSilent(const std::vector<float>& vector) {
+//    return std::all_of(vector.begin(), vector.end(),
+//                       [](float value) { return std::fabs(value) <= EPSILON; });
+//}
 
 struct whisper_params {
     int32_t n_threads = std::min(4, static_cast<int32_t>(std::thread::hardware_concurrency()));
@@ -50,14 +50,12 @@ struct whisper_params {
     std::string model = "ggml-base.en.bin";
 };
 
-bool whisper_params_parse(int argc, char** argv, whisper_params& params);
 
 class Inference {
 public:
     Inference();
     ~Inference();
 
-    void inference(int& n_iter);
     void init_params(const QString& fileName = QString());
     void init_audio();
     void init_whisper();
@@ -66,12 +64,6 @@ public:
     whisper_params get_params() const { return params; }
     whisper_context* get_ctx() const { return ctx; }
     Audio_async* get_audio() const { return audio.get(); }
-
-private:
-    whisper_params params;
-    whisper_full_params wparams{};
-    std::unique_ptr<Audio_async> audio; 
-    whisper_context* ctx = nullptr;
 
     std::vector<float> pcmf32;
     std::vector<float> pcmf32_old;
@@ -82,4 +74,14 @@ private:
     int n_samples_len = 0;
     int n_samples_keep = 0;
     bool use_vad = false;
+
+private:
+    whisper_params params;
+    whisper_full_params wparams{};
+    std::unique_ptr<Audio_async> audio; 
+    whisper_context* ctx = nullptr;
+
+
+
+
 };

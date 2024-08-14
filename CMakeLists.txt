@@ -4,7 +4,6 @@ project(translate)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# Set platform-specific paths and options
 if (WIN32)
     set(Qt5_DIR "C:/Qt/Qt5.14.1/5.14.1")
     set(Qt5_INCLUDE_DIRS "${Qt5_DIR}/msvc2017_64/include/QtWidgets/"
@@ -38,7 +37,7 @@ set(WHISPER_DIR "${PROJECT_SOURCE_DIR}/submodules/whisper.cpp")
 
 add_subdirectory(${RTAUDIO_DIR})
 add_subdirectory(${WHISPER_DIR})
-
+find_package(Qt5 COMPONENTS Core Widgets REQUIRED)
 # Set Qt options
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTOUIC ON)

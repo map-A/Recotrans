@@ -10,6 +10,11 @@
 #include <QPushButton>
 #include <QDebug>
 #include <memory>
+#include <QTimer>
+#include <QDialog>
+#include "QtGui/qscreen.h"
+#include "stream.h"
+#include <QApplication>
 
 class StringGenerator;
 
@@ -19,6 +24,7 @@ class FloatingWindow : public QWidget {
 public:
     explicit FloatingWindow(QWidget *parent = nullptr);
     ~FloatingWindow();
+    void centerAndMoveToBottom();
 
 private slots:
     void updateLabel(const QString &text);

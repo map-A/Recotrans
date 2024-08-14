@@ -23,7 +23,7 @@ FloatingWindow::FloatingWindow(QWidget *parent)
     label = new QLabel("Initial text", this);
     QFont font = label->font();
     font.setPointSize(24);
-    label->setFont(font)
+    label->setFont(font);
     layout->addWidget(label);
     setLayout(layout);
     createMenu();
@@ -93,15 +93,15 @@ void FloatingWindow::openFile()
 void FloatingWindow::createMenu()
 {
     auto *menuBar = new QMenuBar(this);
-    QMenu *settingsMenu = menuBar->addMenu("菜单");
+    QMenu *settingsMenu = menuBar->addMenu("menu");
 
-    auto *colorAction = new QAction("选择颜色", this);
+    auto *colorAction = new QAction("choose color", this);
     connect(colorAction, &QAction::triggered, this, &FloatingWindow::chooseColor);
 
-    auto *opacityAction = new QAction("透明度", this);
+    auto *opacityAction = new QAction("capacity", this);
     connect(opacityAction, &QAction::triggered, this, &FloatingWindow::showOpacitySlider);
 
-    auto *openAction = new QAction("打开文件", this);
+    auto *openAction = new QAction("open file", this);
     connect(openAction, &QAction::triggered, this, &FloatingWindow::openFile);
 
     settingsMenu->addAction(colorAction);

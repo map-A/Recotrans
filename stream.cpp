@@ -1,6 +1,5 @@
 #include "stream.h"
 #include <QDebug>
-#include <vector>
 #include <algorithm>
 #include <cmath>
 
@@ -24,63 +23,6 @@ QString Inference::get_str() const
     return ret;
 }
 
-// Perform the inference and handle the output
-void Inference::inference(int &n_iter)
-{
-    whisper_full(ctx, wparams, pcmf32.data(), pcmf32.size());
-
-    const int n_segments = whisper_full_n_segments(ctx);
-    for (int i = 0; i < n_segments; ++i)
-    {
-        const char *text = whisper_full_get_segment_text(ctx, i);
-
-        if (params.no_timestamps)
-        {
-            printf("%s", text);
-        }
-        else
-        {
-            int64_t t0 = whisper_full_get_segment_t0(ctx, i);
-            int64_t t1 = whisper_full_get_segment_t1(ctx, i);
-
-            std::string output = text;
-            if (whisper_full_get_segment_speaker_turn_next(ctx, i))
-            {
-                output += " [SPEAKER_TURN]";
-            }
-
-            printf("%s\n", output.c_str());
-        }
-        fflush(stdout);
-    }
-
-    ++n_iter;
-
-    if (!use_vad && n_iter == 0)
-    {
-        printf("\n");
-
-        // Retain part of the audio for the next iteration to mitigate word boundary issues
-        pcmf32_old.assign(pcmf32.end() - n_samples_keep, pcmf32.end());
-
-        // Add tokens of the last full-length segment as the prompt
-        if (!params.no_context)
-        {
-            prompt_tokens.clear();
-            for (int i = 0; i < n_segments; ++i)
-            {
-                int token_count = whisper_full_n_tokens(ctx, i);
-                for (int j = 0; j < token_count; ++j)
-                {
-                    prompt_tokens.push_back(whisper_full_get_token_id(ctx, i, j));
-                }
-            }
-        }
-    }
-    fflush(stdout);
-}
-
-// Initialize parameters based on a configuration file (or default)
 void Inference::init_params(const QString &fileName)
 {
     if (!fileName.isEmpty())
