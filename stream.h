@@ -1,4 +1,5 @@
 #pragma once
+
 #include "whisper.h"
 #include "audio.h"
 #include <QWidget>
@@ -7,13 +8,20 @@
 #include <thread>
 #include <iostream>
 #include <algorithm>
+#include <memory>
 
-extern std::vector<float> pcmf32;
-extern std::vector<float> pcmf32_old;
-extern std::vector<float> pcmf32_new;
-extern std::vector<whisper_token> prompt_tokens;
+// extern std::vector<float> pcmf32;
+// extern std::vector<float> pcmf32_old;
+// extern std::vector<float> pcmf32_new;
+// extern std::vector<whisper_token> prompt_tokens;
 
-bool isSilent(const std::vector<float>& vector);
+constexpr float EPSILON = 1e-6;
+
+// Utility function to check if a vector is silent (all values near zero)
+bool isSilent(const std::vector<float>& vector) {
+    return std::all_of(vector.begin(), vector.end(),
+                       [](float value) { return std::fabs(value) <= EPSILON; });
+}
 
 struct whisper_params {
     int32_t n_threads = std::min(4, static_cast<int32_t>(std::thread::hardware_concurrency()));
@@ -53,17 +61,22 @@ public:
     void init_params(const QString& fileName = QString());
     void init_audio();
     void init_whisper();
-    QString get_str();
+    QString get_str() const;
 
     whisper_params get_params() const { return params; }
     whisper_context* get_ctx() const { return ctx; }
-    Audio_async* get_audio() const { return audio; }
+    Audio_async* get_audio() const { return audio.get(); }
 
 private:
     whisper_params params;
     whisper_full_params wparams{};
-    Audio_async* audio = nullptr;
+    std::unique_ptr<Audio_async> audio; 
     whisper_context* ctx = nullptr;
+
+    std::vector<float> pcmf32;
+    std::vector<float> pcmf32_old;
+    std::vector<float> pcmf32_new;
+    std::vector<whisper_token> prompt_tokens;
 
     int n_samples_step = 0;
     int n_samples_len = 0;
