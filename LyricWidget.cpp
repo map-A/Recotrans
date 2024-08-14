@@ -20,15 +20,9 @@ LyricWidget::LyricWidget(QWidget *parent)
     layout->addWidget(opacitySlider);
     setLayout(layout);
     createMenu();
-    m_timer.start(100);
-}
-
-void LyricWidget::setLyrics(const QStringList &lyrics)
-{
-    m_lyrics = lyrics;
     m_currentIndex = 0;
     m_yOffset = height() / 2;
-    update();
+    m_timer.start(100);
 }
 
 void LyricWidget::paintEvent(QPaintEvent *event)
@@ -55,7 +49,10 @@ void LyricWidget::paintEvent(QPaintEvent *event)
 }
 void LyricWidget::updateLyrics(const QString &text) {
     m_lyrics.push_back(text);
-    m_yOffset -= 2; // 每次向上滚动2像素
+    if(m_lyrics.size()>5){
+        m_lyrics.pop_front();
+    }
+    m_yOffset -= 2;
     if (m_yOffset + QFontMetrics(QFont("Arial", 20)).height() < 0)
     {
         m_yOffset = height() / 2;
@@ -83,7 +80,6 @@ void LyricWidget::centerAndMoveToBottom() {
 
     QRect availableGeometry = screen->availableGeometry();
     int xPos = (availableGeometry.width() - sizeHint().width()) / 2;
-
     move(xPos, yPos);
 }
 
