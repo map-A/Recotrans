@@ -1,0 +1,10 @@
+cmake-build-debug/*
+submodules/whisper.cpp
+submodules/rtaudio/build/*
+submodules/rtaudio/cmake
+submodules/rtaudio/cmake-build-debug/*
+submodules/rtaudio/.idea/*
+submodules/rtaudio/.github/*
+submodules/rtaudio/tests/*
+trans_model/*.bin
+.idea/
