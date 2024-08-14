@@ -1,13 +1,15 @@
-
 #pragma once
-
 #include <QThread>
+#include <atomic>
+#include <memory>
 
+class Inference; 
 class StringGenerator : public QThread {
-Q_OBJECT
+    Q_OBJECT
 
 public:
     explicit StringGenerator(QObject *parent = nullptr);
+    ~StringGenerator() override; 
     void run() override;
     void setModel(const QString &fileName);
     void stop();
@@ -16,6 +18,6 @@ signals:
     void newStringAvailable(const QString &str);
 
 private:
-    bool running;
-    Inference *in;
+    std::atomic<bool> running{false}; 
+    std::unique_ptr<Inference> in; 
 };
