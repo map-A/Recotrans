@@ -42,9 +42,6 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    - name: Set up CMake
-      uses: lukka/get-cmake@v3
-
     - name: Set up Qt
       uses: jurplel/install-qt-action@v2
       with:
