@@ -1,5 +1,4 @@
 cmake-build-debug/*
-submodules/whisper.cpp
 submodules/rtaudio/build/*
 submodules/rtaudio/cmake
 submodules/rtaudio/cmake-build-debug/*

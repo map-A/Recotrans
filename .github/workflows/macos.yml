@@ -1,4 +1,4 @@
-name: Windows CI
+name: macOS CI
 
 on:
   push:
@@ -8,17 +8,17 @@ on:
 
 jobs:
   build:
-    runs-on: windows-latest
+    runs-on: macos-latest
 
     strategy:
       matrix:
         build_type: [Release]
-        c_compiler: [cl]
-        cpp_compiler: [cl]
-        msvc_arch: [x64]
+        c_compiler: [clang]
+        cpp_compiler: [clang++]
         cmake_version: [3.26.0]
         qt_ver: [5.14.1]
-        qt_arch: [win64_msvc2019_64]
+        qt_arch: [clang_64]
+
     env:
       build-output-dir: ${{ github.workspace }}/build
       targetName: recotans
@@ -29,22 +29,19 @@ jobs:
       with:
         submodules: false
         fetch-depth: 1
-
     - name: Update submodules
       run: |
         git submodule update --init --recursive
         git submodule foreach git pull origin master
 
-
     - name: Install Qt
-      uses: jurplel/install-qt-action@v4
+      uses: jurplel/install-qt-action@v4.0.0
       with:
         version: ${{ matrix.qt_ver }}
+        host: mac
+        target: desktop
+        arch: ${{ matrix.qt_arch }}
         cached: false
-
-    - name: Set build output directory
-      id: build-dir
-      run: echo "build-output-dir=${{ github.workspace }}/build" >> "$GITHUB_ENV"
 
     - name: Configure CMake
       uses: threeal/cmake-action@v2.0.0
@@ -55,6 +52,11 @@ jobs:
         build-type: ${{ matrix.build_type }}
         source-dir: ${{ github.workspace }}
         binary-dir: ${{ env.build-output-dir }}
+
+    - name: Set build output directory
+      id: build-dir
+      run: echo "build-output-dir=${{ github.workspace }}/build" >> "$GITHUB_ENV"
+
 
     - name: Build the project
       run: cmake --build ${{ env.build-output-dir }} --config ${{ matrix.build_type }}

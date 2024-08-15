@@ -1,4 +1,5 @@
-name: Ubuntu
+name: Ubuntu CI
+
 on:
   push:
     branches: [ "main" ]
@@ -7,50 +8,57 @@ on:
 
 jobs:
   build:
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
 
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest]
         build_type: [Release]
         c_compiler: [gcc, clang]
+        cpp_compiler: [g++, clang++]
+        cmake_version: [3.26.0]
         qt_ver: [5.14.1]
-        include:
-          - os: ubuntu-latest
-            c_compiler: gcc
-            cpp_compiler: g++
-          - os: ubuntu-latest
-            c_compiler: clang
-            cpp_compiler: clang++
+        qt_arch: [linux_gcc_64]
+
+    env:
+      build-output-dir: ${{ github.workspace }}/build
+      targetName: recotans
+
     steps:
-    - name: Install Qt
-      uses: jurplel/install-qt-action@v4.0.0
-  
+    - name: Check out the repository
+      uses: actions/checkout@v4
       with:
-        version: ${{ matrix.qt_ver }}
-        cached: 'false'
-    - name: ubuntu install GL library
+        submodules: false
+        fetch-depth: 1
+    - name: Update submodules
+      run: |
+        git submodule update --init --recursive
+        git submodule foreach git pull origin master
+
+    - name: Install required dependencies
       run: sudo apt-get install -y libglew-dev libglfw3-dev
 
-    - uses: actions/checkout@v4
 
-    - name: Set reusable strings
-      id: strings
-      shell: bash
-      run: |
-        echo "build-output-dir=${{ github.workspace }}/build" >> "$GITHUB_OUTPUT"
+    - name: Install Qt
+      uses: jurplel/install-qt-action@v4.0.0
+      with:
+        version: ${{ matrix.qt_ver }}
+        cached: false
 
     - name: Configure CMake
+      uses: threeal/cmake-action@v2.0.0
+      with:
+        cmake-version: ${{ matrix.cmake_version }}
+        cxx-compiler: ${{ matrix.cpp_compiler }}
+        c-compiler: ${{ matrix.c_compiler }}
+        build-type: ${{ matrix.build_type }}
+        source-dir: ${{ github.workspace }}
+        binary-dir: ${{ env.build-output-dir }}
 
-      run: >
-        cmake -B ${{ steps.strings.outputs.build-output-dir }}
-        -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }}
-        -DCMAKE_C_COMPILER=${{ matrix.c_compiler }}
-        -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
-        -S ${{ github.workspace }}
+    - name: Set build output directory
+      id: build-dir
+      run: echo "build-output-dir=${{ github.workspace }}/build" >> "$GITHUB_ENV"
 
-    - name: Build
-      # Build your program with the given configuration. Note that --config is needed because the default Windows generator is a multi-config generator (Visual Studio generator).
-      run: cmake --build ${{ steps.strings.outputs.build-output-dir }} --config ${{ matrix.build_type }}
 
+    - name: Build the project
+      run:  cmake --build ${{ env.build-output-dir }} --config ${{ matrix.build_type }} 
