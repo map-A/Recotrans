@@ -35,6 +35,19 @@ jobs:
         git submodule update --init --recursive
         git submodule foreach git pull origin master
 
+    - name: Install Visual Studio Build Tools
+      uses: ilammy/msvc-dev-cmd@v1.4.1
+      with:
+        arch: ${{ matrix.msvc_arch }}
+        c_compiler: ${{ matrix.c_compiler }}
+        cpp_compiler: ${{ matrix.cpp_compiler }}
+    
+    - name: set CUDA environment
+      uses: Jimver/cuda-toolkit@v0.2.16
+      id: cuda-toolkit
+      with:
+        cuda: '12.5.0'
+      
 
     - name: Install Qt
       uses: jurplel/install-qt-action@v4
@@ -42,10 +55,7 @@ jobs:
         version: ${{ matrix.qt_ver }}
         cached: false
 
-    - name: Set build output directory
-      id: build-dir
-      run: echo "build-output-dir=${{ github.workspace }}/build" >> "$GITHUB_ENV"
-
+   
     - name: Install ninja-build tool
       uses: seanmiddleditch/gha-setup-ninja@v5
     
@@ -54,15 +64,18 @@ jobs:
       with:
         cmake-version: ${{ matrix.cmake_version }}
 
+    - name: Set build output directory
+      id: build-dir
+      run: echo "build-output-dir=${{ github.workspace }}/build" >> "$GITHUB_ENV"
+
+
     - name: Use cmake
+      shell: cmd
       run: |
-        cmake -DCMAKE_BUILD_TYPE=${{ matrix.build_type}} ^
-              -DCMAKE_MAKE_PROGRAM=${{ ninja.path }} ^
-              -DGGML_CUDA:BOOL=ON ^
-              -G Ninja ^
-              -S . ^
-              -B ${{ env.build-output-dir }}
+        cmake -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}  -DGGML_CUDA:BOOL=ON  -G Ninja -S . -B ${{ env.build-output-dir }}
 
     - name: Build with Ninja
+      shell: cmd
       run: |
-        cmake --build cmake-build-debug --target all
+        cmake --build  ${{ env.build-output-dir }} --config ${{ matrix.build_type }} --target rtaudio -- -j 4
+        cmake --build  ${{ env.build-output-dir }} --config ${{ matrix.build_type }} --target lyric -- -j 4

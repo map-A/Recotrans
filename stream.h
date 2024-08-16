@@ -10,10 +10,6 @@
 #include <algorithm>
 #include <memory>
 
-// extern std::vector<float> pcmf32;
-// extern std::vector<float> pcmf32_old;
-// extern std::vector<float> pcmf32_new;
-// extern std::vector<whisper_token> prompt_tokens;
 
 constexpr float EPSILON = 1e-6;
 
@@ -37,7 +33,7 @@ struct whisper_params {
 
     bool detect_language = true;
     bool translate = false;
-    bool no_fallback = false;
+    bool no_fallback = true;
     bool print_special = false;
     bool no_context = true;
     bool no_timestamps = false;
@@ -45,7 +41,7 @@ struct whisper_params {
     bool use_gpu = true;
     bool flash_attn = true;
 
-    std::string prompt = "When no content is recognized, please do not output any content.";
+    std::string prompt = "Whisper, when transcribing speech to text, prioritize accurate punctuation. For clarity, make sure each sentence is contained in a single subtitle segment. If the sentence is too long, break it up at natural pauses in the speaker's speech to keep the subtitles concise and easy for the audience to understand. When blank speech is recognized, please output the empty string directly, dont output \"thank you\".";
     std::string language = "en";
     std::string model = "ggml-base.en.bin";
 };

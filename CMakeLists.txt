@@ -10,7 +10,7 @@ if (WIN32)
                          "${Qt5_DIR}/msvc2017_64/include/QtGui"
                          "${Qt5_DIR}/msvc2017_64/include/")
     set(Qt5_LIB_DIRS "${Qt5_DIR}/msvc2017_64/lib")
-    set(RTAUDIO_LIB rtaudiod)
+    set(RTAUDIO_LIB rtaudio)
 elseif (APPLE)
     find_package(Qt5 COMPONENTS Core Widgets REQUIRED)
     set(Qt5_INCLUDE_DIRS ${Qt5Widgets_INCLUDE_DIRS} ${Qt5Core_INCLUDE_DIRS})
@@ -53,7 +53,7 @@ include_directories(
 
 # Link directories
 link_directories(${Qt5_LIB_DIRS}
-                 "${PROJECT_SOURCE_DIR}/cmake-build-debug/submodules/rtaudio/")
+                 "${PROJECT_SOURCE_DIR}/build/submodules/rtaudio/")
 
 
 add_executable(lyric lyric.cpp

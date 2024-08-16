@@ -11,11 +11,10 @@ jobs:
     runs-on: ubuntu-latest
 
     strategy:
-      fail-fast: false
       matrix:
         build_type: [Release]
-        c_compiler: [gcc, clang]
-        cpp_compiler: [g++, clang++]
+        c_compiler: [gcc]
+        cpp_compiler: [g++]
         cmake_version: [3.26.0]
         qt_ver: [5.14.1]
         qt_arch: [linux_gcc_64]
@@ -38,6 +37,12 @@ jobs:
     - name: Install required dependencies
       run: sudo apt-get install -y libglew-dev libglfw3-dev
 
+    # - name: set CUDA environment
+    #   uses: Jimver/cuda-toolkit@v0.2.16
+    #   id: cuda-toolkit
+    #   with:
+    #     cuda: '12.5.0'
+
 
     - name: Install Qt
       uses: jurplel/install-qt-action@v4.0.0
@@ -45,20 +50,26 @@ jobs:
         version: ${{ matrix.qt_ver }}
         cached: false
 
-    - name: Configure CMake
-      uses: threeal/cmake-action@v2.0.0
+    
+    - name: Install ninja-build tool
+      uses: seanmiddleditch/gha-setup-ninja@v5
+    
+    - name: Setup cmake
+      uses: jwlawson/actions-setup-cmake@v2
       with:
         cmake-version: ${{ matrix.cmake_version }}
-        cxx-compiler: ${{ matrix.cpp_compiler }}
-        c-compiler: ${{ matrix.c_compiler }}
-        build-type: ${{ matrix.build_type }}
-        source-dir: ${{ github.workspace }}
-        binary-dir: ${{ env.build-output-dir }}
-
+    
     - name: Set build output directory
       id: build-dir
       run: echo "build-output-dir=${{ github.workspace }}/build" >> "$GITHUB_ENV"
 
 
-    - name: Build the project
-      run:  cmake --build ${{ env.build-output-dir }} --config ${{ matrix.build_type }} 
+    - name: Use cmake
+      run: |
+        cmake --version
+        cmake -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}  -DGGML_CUDA:BOOL=ON -G Ninja -S . -B ${{ env.build-output-dir }}
+
+    - name: Build with Ninja
+      run: |
+        cmake --build  ${{ env.build-output-dir }} --config ${{ matrix.build_type }} --target rtaudio -- -j 4
+        cmake --build  ${{ env.build-output-dir }} --config ${{ matrix.build_type }} --target lyric -- -j 4
