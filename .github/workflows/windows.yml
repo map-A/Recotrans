@@ -46,15 +46,23 @@ jobs:
       id: build-dir
       run: echo "build-output-dir=${{ github.workspace }}/build" >> "$GITHUB_ENV"
 
-    - name: Configure CMake
-      uses: threeal/cmake-action@v2.0.0
+    - name: Install ninja-build tool
+      uses: seanmiddleditch/gha-setup-ninja@v5
+    
+    - name: Setup cmake
+      uses: jwlawson/actions-setup-cmake@v2
       with:
         cmake-version: ${{ matrix.cmake_version }}
-        cxx-compiler: ${{ matrix.cpp_compiler }}
-        c-compiler: ${{ matrix.c_compiler }}
-        build-type: ${{ matrix.build_type }}
-        source-dir: ${{ github.workspace }}
-        binary-dir: ${{ env.build-output-dir }}
 
-    - name: Build the project
-      run: cmake --build ${{ env.build-output-dir }} --config ${{ matrix.build_type }}
+    - name: Use cmake
+      run: |
+        cmake -DCMAKE_BUILD_TYPE=${{ matrix.build_type}} ^
+              -DCMAKE_MAKE_PROGRAM=${{ ninja.path }} ^
+              -DGGML_CUDA:BOOL=ON ^
+              -G Ninja ^
+              -S . ^
+              -B ${{ env.build-output-dir }}
+
+    - name: Build with Ninja
+      run: |
+        cmake --build cmake-build-debug --target all
