@@ -59,8 +59,8 @@ link_directories(${Qt5_LIB_DIRS}
 add_executable(lyric lyric.cpp
         LyricWidget.cpp
         LyricWidget.h
-        stream.h
-        stream.cpp
+        inference.h
+        inference.cpp
         audio.h
         audio.cpp
         stringgenerator.h
