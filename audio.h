@@ -20,21 +20,55 @@ template<typename T>
 class DoubleBuffer
 {
 public:
-   DoubleBuffer(size_t size)
-        : buffer_size(size), active_buffer(&buffer1), inactive_buffer(&buffer2),dataAvailable(false) {
+    explicit DoubleBuffer(size_t size)
+            : buffer_size(size), activeBuffer(&buffer1), inactiveBuffer(&buffer2),dataAvailable(false) {
         buffer1.resize(size);
         buffer2.resize(size);
 
     }
-    void write(const uint8_t *data, size_t len);
-    void read(std::vector<float>& data);
-    std::vector<T> read();
-    void clear();
+    void write(const uint8_t *data, size_t len)
+    {
+        if (len > buffer_size)
+        {
+            throw std::runtime_error("Data size exceeds buffer size.");
+        }
+        std::unique_lock<std::mutex> lock(mutex);
+        std::copy(data, data + len, activeBuffer->begin());
+        dataAvailable = true;
+        cv.notify_one();
+    }
+    void read(std::vector<float> &data)
+    {
+        std::unique_lock<std::mutex> lock(mutex);
+        cv.wait(lock, [this]
+        { return dataAvailable; });
+        data.clear();
+        data.resize(inactiveBuffer->size() / sizeof(float));
+        std::copy(inactiveBuffer->begin(), inactiveBuffer->end(), data.data());
+        std::swap(activeBuffer, inactiveBuffer);
+        dataAvailable = false;
+    }
+    std::vector<T> read()
+    {
+        std::unique_lock<std::mutex> lock(mutex);
+        cv.wait(lock);
+        return *inactiveBuffer;
+    }
+    void clear()
+    {
+        std::unique_lock<std::mutex> lock(mutex);
+        activeBuffer->clear();
+        inactiveBuffer->clear();
+        buffer1.clear();
+        buffer2.clear();
+        dataAvailable = false;
+        cv.notify_one();
+    }
 
 private:
     size_t buffer_size;
     std::vector<T> buffer1, buffer2;
-    std::vector<T> *active_buffer, *inactive_buffer;
+    std::vector<T> *activeBuffer, *inactiveBuffer;
     bool dataAvailable;
     std::mutex mutex;
     std::condition_variable cv;

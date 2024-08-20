@@ -2,6 +2,7 @@
 #include <QThread>
 #include <atomic>
 #include <memory>
+#include <utility>
 
 class Inference;
 class Audio_async;
@@ -15,9 +16,9 @@ public:
     void run() override;
     void stop();
     void setModel(const QString &fileName);
-    void setBuffer(std::shared_ptr<DoubleBuffer> buffer)
+    void setBuffer(std::shared_ptr<DoubleBuffer<float>> buffer)
     {
-        inference->set_buffer(buffer);
+        inference->set_buffer(std::move(buffer));
     }
 signals:
     void newStringAvailable(const QString &str);
@@ -31,7 +32,7 @@ class AudioCapture : public QThread
     Q_OBJECT
 
 public:
-    WorkerThread(QObject *parent = nullptr)
+    explicit AudioCapture(QObject *parent = nullptr)
         : QThread(parent)
     {
         audio = std::make_unique<Audio_async>(WHISPER_SAMPLE_RATE, 2000);
@@ -40,13 +41,12 @@ public:
             fprintf(stderr, "%s: audio.init() failed!\n", __func__);
         }
     }
-    void setBuffer(std::shared_ptr<DoubleBuffer> buffer)
+    void setBuffer(std::shared_ptr<DoubleBuffer<float>> buffer)
     {
         audio->set_buffer(buffer);
     }
-    ~WorkerThread() override
+    ~AudioCapture() override
     {
-        stop();
         wait();
     }
 protected:

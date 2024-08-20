@@ -67,8 +67,7 @@ void LyricWidget::updateLyrics(const QString &text) {
 LyricWidget::~LyricWidget() {
     if (stringGenerator)
     {
-        AudioCapture.stop();
-        AudioCapture.wait();
+        audioCapture->wait();
         stringGenerator->stop();
         stringGenerator->wait();
     }
@@ -110,7 +109,7 @@ void LyricWidget::openFile() {
     {
         audioCapture = std::make_unique<AudioCapture>(this);
         stringGenerator = std::make_unique<StringGenerator>(this);
-        auto buffer = std::make_shared<DoubleBuffer>(1024);
+        auto buffer = std::make_shared<DoubleBuffer<float>>(1024);
         audioCapture->setBuffer(buffer);
         stringGenerator->setBuffer(buffer);  
         stringGenerator->setModel(fileName);

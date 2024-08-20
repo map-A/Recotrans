@@ -18,7 +18,8 @@
 #include <QTimer>
 #include <QDialog>
 #include "QtGui/qscreen.h"
-#include "stream.h"
+#include "inference.h"
+#include "stringgenerator.h"
 #include <QApplication>
 
 class StringGenerator;

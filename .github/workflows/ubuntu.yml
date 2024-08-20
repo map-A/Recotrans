@@ -35,13 +35,13 @@ jobs:
         git submodule foreach git pull origin master
 
     - name: Install required dependencies
-      run: sudo apt-get install -y libglew-dev libglfw3-dev
+      run: sudo apt-get install -y libglew-dev libglfw3-dev libasound2-dev
 
-    # - name: set CUDA environment
-    #   uses: Jimver/cuda-toolkit@v0.2.16
-    #   id: cuda-toolkit
-    #   with:
-    #     cuda: '12.5.0'
+    - name: set CUDA environment
+      uses: Jimver/cuda-toolkit@v0.2.16
+      id: cuda-toolkit
+      with:
+        cuda: '12.5.0'
 
 
     - name: Install Qt

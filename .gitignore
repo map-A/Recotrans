@@ -1,6 +1,5 @@
-cmake-build-debug/*
+build/*
 submodules/rtaudio/build/*
-submodules/rtaudio/cmake
 submodules/rtaudio/cmake-build-debug/*
 submodules/rtaudio/.idea/*
 submodules/rtaudio/.github/*

@@ -59,12 +59,14 @@ link_directories(${Qt5_LIB_DIRS}
 add_executable(lyric lyric.cpp
         LyricWidget.cpp
         LyricWidget.h
-        stream.h
-        stream.cpp
+        inference.h
+        inference.cpp
+        stringgenerator.h
+        stringgenerator.cpp
         audio.h
         audio.cpp
-        stringgenerator.h
-        stringgenerator.cpp)
+
+        )
 target_link_libraries(lyric PRIVATE Qt5::Widgets Qt5::Core whisper ${RTAUDIO_LIB} ${CMAKE_THREAD_LIBS_INIT})
 
 

@@ -10,8 +10,6 @@ Inference::~Inference()
     whisper_free(ctx);
 }
 
-
-
 void Inference::init_params(const QString &fileName)
 {
     if (!fileName.isEmpty())
@@ -25,7 +23,7 @@ void Inference::init_params(const QString &fileName)
     n_samples_len = static_cast<int>(1e-3 * params.length_ms * WHISPER_SAMPLE_RATE);
     n_samples_keep = static_cast<int>(1e-3 * params.keep_ms * WHISPER_SAMPLE_RATE);
 
-    use_vad = true; // Sliding window mode uses VAD
+    use_vad = true;
 
     params.no_timestamps = !use_vad;
     params.no_context |= use_vad;

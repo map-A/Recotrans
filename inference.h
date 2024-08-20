@@ -1,16 +1,14 @@
 #pragma once
-
-
 #include <QWidget>
+#include <utility>
 #include <vector>
 #include <string>
-
+#include <thread>
 #include "whisper.h"
 #include "audio.h"
 
 
 constexpr float EPSILON = 1e-6;
-
 //// Utility function to check if a vector is silent (all values near zero)
 //bool isSilent(const std::vector<float>& vector) {
 //    return std::all_of(vector.begin(), vector.end(),
@@ -54,11 +52,11 @@ public:
     void init_whisper();
     QString get_str(std::vector<float> &data) const;
 
-    QString process() const ;
+    QString process();
 
-    void set_buffer(std::shared_ptr<DoubleBuffer> buffer)
+    void set_buffer(std::shared_ptr<DoubleBuffer<float>> buffer)
     {
-        data = buffer;
+        data = std::move(buffer);
     }
 
     int n_samples_step = 0;
@@ -70,6 +68,6 @@ private:
     whisper_params params;
     whisper_full_params wparams{};
     whisper_context* ctx = nullptr;
-    std::shared_ptr<DoubleBuffer> data;
+    std::shared_ptr<DoubleBuffer<float>> data;
     QString inference_str;
 };
