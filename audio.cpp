@@ -1,105 +1,95 @@
 #include "audio.h"
 
-int input( void * /*outputBuffer*/, void *inputBuffer, unsigned int nBufferFrames,
-           double /*streamTime*/, RtAudioStreamStatus /*status*/, void *data )
+template <typename T>
+void DoubleBuffer<T>::write(const uint8_t *data, size_t len)
 {
-    auto *iData = (InputData *) data;
-    auto * stream  = (MY_TYPE *)inputBuffer;
-    int len = nBufferFrames  * 2*2;
-
-    size_t n_samples = len/sizeof(float);
-    if (n_samples > iData->m_audio.size()) {
-        n_samples = iData->m_audio.size();
-        stream += (len - (n_samples * sizeof(float)));
-    }
+    if (len > buffer_size)
     {
-        std::lock_guard<std::mutex> lock(iData->m_mutex);
-        if (iData->m_audio_pos + n_samples > iData->m_audio.size()) {
-            const size_t n0 = iData->m_audio.size() - iData->m_audio_pos;
-            memcpy(&iData->m_audio[iData->m_audio_pos], stream, n0 * sizeof(float));
-            memcpy(&iData->m_audio[0], stream + n0 * sizeof(float), (n_samples - n0) * sizeof(float));
-            iData->m_audio_pos = (iData->m_audio_pos + n_samples) % iData->m_audio.size();
-            iData->m_audio_len = iData->m_audio.size();
-        } else {
-            memcpy(&iData->m_audio[iData->m_audio_pos], stream, len);
-            iData->m_audio_pos = (iData->m_audio_pos + n_samples) % iData->m_audio.size();
-            iData->m_audio_len = std::min(iData->m_audio_len + n_samples, iData->m_audio.size());
-        }
+        throw std::runtime_error("Data size exceeds buffer size.");
     }
+    std::unique_lock<std::mutex> lock(mutex);
+    std::copy(data, data + len, activeBuffer->begin());
+    dataAvailable = true;
+    cv.notify_one();
+}
+
+template <typename T>
+void DoubleBuffer<T>::read(std::vector<float> &data)
+{
+    std::unique_lock<std::mutex> lock(mutex);
+    cv.wait(lock, [this]
+            { return dataAvailable; });
+    data.clear();
+    data.resize(inactiveBuffer->size() / sizeof(float));
+    std::copy(inactiveBuffer->begin(), inactiveBuffer->end(), data.data());
+    std::swap(activeBuffer, inactiveBuffer);
+    dataAvailable = false;
+}
+
+template <typename T>
+std::vector<T> DoubleBuffer<T>::read()
+{
+    std::unique_lock<std::mutex> lock(mtx);
+    data_ready.wait(lock);
+    return *inactive_buffer;
+}
+
+template <typename T>
+void DoubleBuffer<T>::clear()
+{
+    std::unique_lock<std::mutex> lock(mutex);
+    activeBuffer->clear();
+    inactiveBuffer->clear();
+    buffer1.clear();
+    buffer2.clear();
+    dataAvailable = false;
+    cv.notify_one();
+}
+
+// 将inputBuffer中的数据存入data中
+int input(void * /*outputBuffer*/, void *inputBuffer, unsigned int nBufferFrames,
+          double /*streamTime*/, RtAudioStreamStatus /*status*/, void *data)
+{
+    auto *stream = static_cast<uint8_t *>(inputBuffer);
+    auto *doubleBuffer = static_cast<DoubleBuffer<float> *>(data);
+    int len = nBufferFrames * 2 * 2;
+    doubleBuffer->write(stream, len);
     return 0;
 }
 
-void Audio_async::get(int ms, std::vector<float> & result) {
-    if(!adc.isStreamRunning()){
-        fprintf(stderr, "%s: not running!\n", __func__);
-        return;
-    }
-    result.clear();
-    {
-        std::lock_guard<std::mutex> lock(data.m_mutex);
-        if (ms <= 0) {
-            ms = m_len_ms;
-        }
-
-        size_t n_samples = ( m_sample_rate* ms) / 1000;
-        if (n_samples > data.m_audio_len) {
-            n_samples = data.m_audio_len;
-        }
-
-        result.resize(n_samples);
-
-        int s0 = data.m_audio_pos - n_samples;
-        if (s0 < 0) {
-            s0 += data.m_audio.size();
-        }
-
-        if (s0 + n_samples > data.m_audio.size()) {
-            const size_t n0 = data.m_audio.size() - s0;
-            memcpy(result.data(), &data.m_audio[s0], n0 * sizeof(float));
-            memcpy(&result[n0], &data.m_audio[0], (n_samples - n0) * sizeof(float));
-        } else {
-            memcpy(result.data(), &data.m_audio[s0], n_samples * sizeof(float));
-        }
-    }
+Audio_async::Audio_async(unsigned int sample_rate, int len_ms) : adc(std::make_unique<RtAudio>()), m_len_ms(len_ms), m_sample_rate(sample_rate)
+{
 }
-
-
-Audio_async::Audio_async(int len_ms) {
-    m_len_ms = len_ms;
-    adc.showWarnings( true );
+void Audio_async::capture_audio(unsigned int bufferFrames)
+{
+    adc->showWarnings(true);
     oParams.nChannels = 1;
     oParams.firstChannel = 0;
-    oParams.deviceId = adc.getDefaultOutputDevice();
-    oParams.is_output=false;
-
+    oParams.deviceId = adc->getDefaultOutputDevice();
+    oParams.is_output = false;
+    if (adc->openStream(&oParams, nullptr, FORMAT, m_sample_rate, &bufferFrames, &input, (void *)&data))
+    {
+        clean();
+    }
+    if (adc->startStream())
+    {
+        clean();
+    }
 }
 
 Audio_async::~Audio_async() = default;
 
-bool Audio_async::init(unsigned int sample_rate,unsigned int bufferFrames) {
-    m_sample_rate = sample_rate;
-    data.m_audio.resize((sample_rate*m_len_ms*3)/1000);
-    if ( adc.openStream( &oParams, nullptr, FORMAT,
-                         sample_rate, &bufferFrames, &input, (void *)&data ) ){
-        clean();
-    }
-    if ( adc.startStream() ){
-        clean();
-    }
-
-    return true;
+void Audio_async::clear()
+{
+    data->clear();
 }
 
-
-
-bool Audio_async::clear() {
+void Audio_async::get(std::vector<float> &result)
+{
+    if (!adc->isStreamRunning())
     {
-        std::lock_guard<std::mutex> lock(data.m_mutex);
-        data.m_audio_len = 0;
-        data.m_audio_len = 0;
+        fprintf(stderr, "%s: not running!\n", __func__);
+        return;
     }
-    return true;
+    data->read(result);
 }
-
-
-

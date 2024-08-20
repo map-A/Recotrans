@@ -53,6 +53,7 @@ private:
     int m_currentIndex;
     int m_yOffset;
     QTimer m_timer;
+    std::unique_ptr<AudioCapture> audioCapture;
     std::unique_ptr<StringGenerator> stringGenerator;
     QSlider *opacitySlider{nullptr};
 };

@@ -1,4 +1,4 @@
-#include "stream.h"
+#include "inference.h"
 #include <QDebug>
 #include <algorithm>
 #include <cmath>
@@ -10,18 +10,7 @@ Inference::~Inference()
     whisper_free(ctx);
 }
 
-QString Inference::get_str() const
-{
-    QString ret;
-    whisper_full(ctx, wparams, pcmf32.data(), pcmf32.size());
 
-    int n_segments = whisper_full_n_segments(ctx);
-    for (int i = 0; i < n_segments; ++i)
-    {
-        ret += whisper_full_get_segment_text(ctx, i);
-    }
-    return ret;
-}
 
 void Inference::init_params(const QString &fileName)
 {
@@ -63,30 +52,57 @@ void Inference::init_params(const QString &fileName)
     wparams.tdrz_enable = params.tinydiarize;
 
     wparams.temperature_inc = params.no_fallback ? 0.0f : wparams.temperature_inc;
-    wparams.prompt_tokens = params.no_context ? nullptr : prompt_tokens.data();
-    wparams.prompt_n_tokens = params.no_context ? 0 : prompt_tokens.size();
-}
-
-// Initialize the audio system
-void Inference::init_audio()
-{
-    audio = std::make_unique<Audio_async>(2000);
-    if (!audio->init(WHISPER_SAMPLE_RATE, 512))
-    {
-        fprintf(stderr, "%s: audio.init() failed!\n", __func__);
-    }
 }
 
 // Initialize Whisper context and allocate memory
 void Inference::init_whisper()
 {
-    const int n_samples_30s = static_cast<int>(1e-3 * 20000.0 * WHISPER_SAMPLE_RATE);
-    pcmf32.assign(n_samples_30s, 0.0f);
-    pcmf32_new.assign(n_samples_30s, 0.0f);
-
     whisper_context_params cparams = whisper_context_default_params();
     cparams.use_gpu = params.use_gpu;
     cparams.flash_attn = params.flash_attn;
-
     ctx = whisper_init_from_file_with_params(params.model.c_str(), cparams);
+
+     if (!whisper_is_multilingual(ctx))
+    {
+        if (params.language != "en" || params.translate)
+        {
+            params.language = "en";
+            params.translate = false;
+            fprintf(stderr, "%s: WARNING: model is not multilingual, ignoring language and translation options\n",
+                    __func__);
+        }
+    }
+}
+
+
+QString Inference::process()
+{
+    inference_str.clear();
+    auto pcmf32 = data->read();
+    if (pcmf32.empty())
+    {  
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        return inference_str;
+    }
+    whisper_full(ctx, wparams, pcmf32.data(), pcmf32.size());
+
+    int n_segments = whisper_full_n_segments(ctx);
+    for (int i = 0; i < n_segments; ++i)
+    {
+        inference_str += whisper_full_get_segment_text(ctx, i);
+    }
+    return inference_str;
+}
+
+QString Inference::get_str(std::vector<float>&pcmf32) const
+{
+    QString ret;
+    whisper_full(ctx, wparams, pcmf32.data(), pcmf32.size());
+
+    int n_segments = whisper_full_n_segments(ctx);
+    for (int i = 0; i < n_segments; ++i)
+    {
+        ret += whisper_full_get_segment_text(ctx, i);
+    }
+    return ret;
 }

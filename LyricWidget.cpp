@@ -67,6 +67,8 @@ void LyricWidget::updateLyrics(const QString &text) {
 LyricWidget::~LyricWidget() {
     if (stringGenerator)
     {
+        AudioCapture.stop();
+        AudioCapture.wait();
         stringGenerator->stop();
         stringGenerator->wait();
     }
@@ -106,9 +108,14 @@ void LyricWidget::openFile() {
     QString fileName = QFileDialog::getOpenFileName(this, "选择文件", "");
     if (!fileName.isEmpty())
     {
+        audioCapture = std::make_unique<AudioCapture>(this);
         stringGenerator = std::make_unique<StringGenerator>(this);
+        auto buffer = std::make_shared<DoubleBuffer>(1024);
+        audioCapture->setBuffer(buffer);
+        stringGenerator->setBuffer(buffer);  
         stringGenerator->setModel(fileName);
         connect(stringGenerator.get(), &StringGenerator::newStringAvailable, this, &LyricWidget::updateLyrics);
+        audioCapture->start();
         stringGenerator->start();
     }
 }

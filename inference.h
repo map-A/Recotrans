@@ -1,14 +1,12 @@
 #pragma once
 
-#include "whisper.h"
-#include "audio.h"
+
 #include <QWidget>
 #include <vector>
 #include <string>
-#include <thread>
-#include <iostream>
-#include <algorithm>
-#include <memory>
+
+#include "whisper.h"
+#include "audio.h"
 
 
 constexpr float EPSILON = 1e-6;
@@ -53,18 +51,15 @@ public:
     ~Inference();
 
     void init_params(const QString& fileName = QString());
-    void init_audio();
     void init_whisper();
-    QString get_str() const;
+    QString get_str(std::vector<float> &data) const;
 
-    whisper_params get_params() const { return params; }
-    whisper_context* get_ctx() const { return ctx; }
-    Audio_async* get_audio() const { return audio.get(); }
+    QString process() const ;
 
-    std::vector<float> pcmf32;
-    std::vector<float> pcmf32_old;
-    std::vector<float> pcmf32_new;
-    std::vector<whisper_token> prompt_tokens;
+    void set_buffer(std::shared_ptr<DoubleBuffer> buffer)
+    {
+        data = buffer;
+    }
 
     int n_samples_step = 0;
     int n_samples_len = 0;
@@ -74,10 +69,7 @@ public:
 private:
     whisper_params params;
     whisper_full_params wparams{};
-    std::unique_ptr<Audio_async> audio; 
     whisper_context* ctx = nullptr;
-
-
-
-
+    std::shared_ptr<DoubleBuffer> data;
+    QString inference_str;
 };
