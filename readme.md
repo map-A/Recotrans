@@ -1,56 +1,64 @@
-### 配置 1: Windows 10 + Visual Studio 2022 + CUDA 11.7 + Qt5
 
-#### 环境设置
+## Project Overview: Real-time Audio Capture and Recognition using Whisper + RtAudio
 
-- **操作系统**: Windows 10
-- **编译器**: Visual Studio 2022 (MSVC)
-- **CUDA 版本**: CUDA 11.7
-- **Qt 版本**: Qt 5.14.1（或其他兼容版本）
+### Configuration 1: Windows 10 + Visual Studio 2022 + CUDA 11.7 + Qt5
 
-#### 安装步骤
+#### Environment Setup
 
-1. **安装 Visual Studio 2022**:
-   - 下载并安装 Visual Studio 2022，确保安装了“桌面开发 C++”工作负载。
-   - 安装时还可以选择CUDA支持的附加组件。
+- **Operating System**: Windows 10
+- **Compiler**: Visual Studio 2022 (MSVC)
+- **CUDA Version**: CUDA 11.7
+- **Qt Version**: Qt 5.14.1 (or any compatible version)
 
-2. **安装 CUDA 11.7**:
-   - 下载并安装 CUDA 11.7 Toolkit。
-   - 安装完成后，确保 CUDA 的 bin 和 lib 路径已添加到系统的 `PATH` 环境变量中。
+#### Installation Steps
 
-3. **安装 Qt 5**:
-   - 使用 Qt 在线安装程序安装 Qt 5.14.1（或所需版本）。
-   - 确保选择 MSVC 2017/2019/2022 64-bit 版本。
+1. **Install Visual Studio 2022**:
+   - Download and install Visual Studio 2022, ensuring the "Desktop development with C++" workload is installed.
 
-4. **配置 CMake**:
-   - 将 `Qt5_DIR` 设置为 `C:/Qt/Qt5.14.1/5.14.1/msvc2017_64/lib/cmake/Qt5`。
-   - 在 CMakeLists.txt 中，添加路径到 CUDA 的头文件和库：
-  
+2. **Install CUDA 11.7**:
+   - Download and install the CUDA 11.7 Toolkit.
+   - After installation, ensure that the CUDA `bin` and `lib` paths are added to the system `PATH` environment variable.
+
+3. **Install Qt 5**:
+   - Install Qt 5.14.1 (or the required version) using the Qt Online Installer.
+   - Ensure that you select the MSVC 2017/2019/2022 64-bit version.
+
+4. **Configure CMake**:
+   - Set the `Qt5_DIR` to `C:/Qt/Qt5.14.1/5.14.1/msvc2017_64/lib/cmake/Qt5`.
+   - In the `CMakeLists.txt`, add the paths to the CUDA headers and libraries:
+
      ```cmake
      include_directories("C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v11.7/include")
      link_directories("C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v11.7/lib/x64")
      ```
 
-#### 编译和运行
+#### Build and Run
 
-- 使用 Clion 选择msvc编译器，然后编译。
+   ```
+   mkdir build
+   cd build
+   cmake -DCMAKE_BUILD_TYPE=Release  -DGGML_CUDA:BOOL=ON  -G Ninja -S . -B ./build
+   cmake --build ./build  --target rtaudio -j 4
+   cmake --build ./build  --target lyric -j 4
+   ```
 
-### 配置 2: Ubuntu 20.04 + GCC 9.9.3 + Qt5 (TODO)
+### Configuration 2: Ubuntu 20.04 + GCC 9.9.3 + Qt5 (TODO)
 
-#### 环境设置
+#### Environment Setup
 
-- **操作系统**: Ubuntu 20.04
-- **编译器**: GCC 9.9.3
-- **Qt 版本**: Qt 5.14.x 或更高版本
+- **Operating System**: Ubuntu 20.04
+- **Compiler**: GCC 9.9.3
+- **Qt Version**: Qt 5.14.x or higher
 
-1. **配置 CMake**:
-   - 自动查找 Qt5 库，使用 CMake 时无需额外配置路径。
+1. **Configure CMake**:
+   - Automatically find the Qt5 libraries; no additional path configuration is needed during CMake setup.
 
-2. **CUDA 安装（可选）**:
-   - 如果需要 CUDA，按照 NVIDIA 的官方文档安装合适版本。
+2. **CUDA Installation (Optional)**:
+   - If CUDA is needed, follow the official NVIDIA documentation to install the appropriate version.
 
-#### 编译和运行 (TODO)
+#### Build and Run (TODO)
 
-- 使用 CMake 编译项目：
+- Build the project using CMake:
   
   ```bash
   mkdir build
@@ -59,46 +67,47 @@
   make
   ```
 
-- 运行生成的可执行文件。
+- Run the generated executable.
 
-### 配置 3: macOS 15.6 + Clang + Qt5 (TODO)
+### Configuration 3: macOS 15.6 + Clang + Qt5 (TODO)
 
-#### 环境设置
+#### Environment Setup
 
-- **操作系统**: macOS 15.6
-- **编译器**: Clang（macOS 自带）
-- **Qt 版本**: Qt 5.14.x 或更高版本
+- **Operating System**: macOS 15.6
+- **Compiler**: Clang (included with macOS)
+- **Qt Version**: Qt 5.14.x or higher
 
-#### 安装步骤 (TODO)
+#### Installation Steps (TODO)
 
-1. **安装 Homebrew**:
+1. **Install Homebrew**:
 
-   - 打开终端并安装 Homebrew：
+   - Open Terminal and install Homebrew:
   
      ```bash
      /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
      ```
 
-2. **安装 Qt 5**:
-   - 使用 Homebrew 安装 Qt 5：
+2. **Install Qt 5**:
+   - Install Qt 5 using Homebrew:
   
      ```bash
      brew install qt5
      ```
 
-3. **配置环境变量**:
-   - 将 Qt 5 的 `qmake` 添加到路径：
+3. **Configure Environment Variables**:
+   - Add Qt 5’s `qmake` to the PATH:
   
      ```bash
      export PATH="/usr/local/opt/qt/bin:$PATH"
      ```
 
-4. **配置 CMake**:
-   - CMake 将自动检测 Clang 和 Qt 5 的安装，无需额外配置。
+4. **Configure CMake**:
+   - CMake will automatically detect the installation of Clang and Qt 5, so no additional configuration is necessary.
 
-#### 编译和运行 (TODO)
+#### Build and Run (TODO)
 
-- 使用 CMake 编译项目：
+- Build the project using CMake:
+  
   ```bash
   mkdir build
   cd build
@@ -106,28 +115,27 @@
   make
   ```
 
-- 运行生成的可执行文件。
+- Run the generated executable.
 
 ---
 
+### Project File Description
 
-### 项目文件说明
+1. **main.cpp**
+   - **Description**: The main entry file of the project, containing the main function. This file is typically responsible for initializing key components of the application, setting up the main window, starting the main event loop, and invoking the functions of other modules.
 
-1. main.cpp
-描述: 项目的主入口文件，包含程序的 main 函数。这个文件通常负责初始化应用程序的关键组件，设置主窗口，启动主事件循环，并调用其他模块的功能。
-1. floatingWindow.cpp 和 floatingWindow.h
-描述:包括界面的设计
+2. **lyric.cpp and lyric.h**
+   - **Description**: Includes the interface design.
 
-1. stream.h 和 stream.cpp
-描述:
-获取音频流
-1. audio.h 和 audio.cpp
-描述:管理音频接口
-1. stringgenerator.h 和 stringgenerator.cpp
-描述:使用whisper 解析音频流，生成字符串
+3. **inference.h and inference.cpp**
+   - **Description**: Handles audio inference using Whisper.
 
-### TODO: 
+4. **audio.h and audio.cpp**
+   - **Description**: Manages audio interfaces.
 
-1. 识别文字分割优化
-2. qt界面完善，计划做成歌词滚动效果
-3. 项目组织，目前还没有做到开箱即用，以及多平台也没有测试。
+5. **stringgenerator.h and stringgenerator.cpp**
+   - **Description**: Generates strings and passes them to the GUI.
+
+### TODO:
+
+1. Optimize text segmentation for recognition.
