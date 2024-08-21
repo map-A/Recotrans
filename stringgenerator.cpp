@@ -1,12 +1,8 @@
-#pragma once
-
 #include "inference.h"
-#include "audio.h"
 #include "stringgenerator.h"
 #include <QDebug>
 #include <thread>
-#include <chrono>
-#include <iostream>
+
 
 StringGenerator::StringGenerator(QObject *parent)
     : QThread(parent)
@@ -22,7 +18,7 @@ void StringGenerator::run()
 {          
     while (running)
     {   
-        generatedString = inference->process();
+        QString generatedString = inference->process();
         emit newStringAvailable(generatedString);
     }
 }
